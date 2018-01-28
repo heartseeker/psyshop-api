@@ -1,5 +1,6 @@
 const mongoose = require('../db/mongoose');
 const Schema = mongoose.Schema;
+const Qualification = require('./subdoc/qualification');
 
 // Create Doctors Schema
 const DoctorSchema = new Schema({
@@ -18,9 +19,8 @@ const DoctorSchema = new Schema({
     practicing_from: {
         type: Date,
         default: null
-    }
+    },
+    qualifications: [Qualification]
 });
 
-const doctor = mongoose.model('Doctor', DoctorSchema);
-
-module.exports = doctor;
+module.exports = mongoose.model('Doctor', DoctorSchema);

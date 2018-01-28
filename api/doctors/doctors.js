@@ -36,21 +36,11 @@ router.post('/', (req, res) => {
 // ==============================================
 router.put('/:id', (req, res) => {
 
-    Doctor.findOne({_id: req.params.id}).then((data) => {
-        data.first_name = req.body.first_name;
-        data.last_name = req.body.last_name;
-        data.professional_statement = req.body.professional_statement;
-        data.practicing_from = req.body.practicing_from;
-
-        data.save().then((updatedData) => {
-            res.status(200).json(updatedData);
-        }, (err) => {
-            res.status(400).json(err);
-        });
-
+    Doctor.findOneAndUpdate(req.params.id, { $set: req.body }, {new: true}).then((data) => {
+        res.status(200).json(data);
     }, (err) => {
         res.status(400).json(err);
-    })
+    });
 
 });
 
@@ -77,5 +67,41 @@ router.delete('/:id', (req, res) => {
     });
     
 });
+
+// create doctor qualification
+// ==============================================
+router.post('/:id/qualifications', (req, res) => {
+
+    const doctor = Doctor.findOne({_id: req.params.id}).then((doctor) => {
+        doctor.qualifications.push(req.body);
+        return doctor.save();
+    })
+    .then((data) => {
+        res.status(200).json(data);
+    }, (err) => {
+        res.status(400).json(err);
+    });
+
+});
+
+
+// updating doctor qualification
+// ==============================================
+router.put('/:id/qualifications/:qid', (req, res) => {
+
+    const { id, qid } = req.params;
+
+    const doctor = Doctor.findOneAndUpdate(
+        { '_id': id, 'qualifications._id': qid}, 
+        { $set: { 'qualifications.$': req.body } },
+        { new: true }
+    )
+    .then((data) => {
+        res.status(200).json(data);
+    }, (err) => {
+        res.status(400).json(err);
+    });
+});
+
 
 module.exports = router;
