@@ -2,15 +2,36 @@ const express = require('express');
 
 const router = express.Router();
 
+const mongoose = require('mongoose');
+
+const _ = require('lodash');
+
+
+
 // load models
 // ==============================================
 const Doctor = require('../../models/doctor');
+const Qualification = require('../../models/qualification');
+const User = require('../../models/user');
+
+// load Middlewares
+// ==============================================
+const authenticate = require('../middleware/authenticate');
+
+
+
+// API doctor self route
+// ==============================================
+router.get('/me', authenticate,  (req, res) => {
+    res.send(req.user);
+});
+
 
 // API doctor routes
 // ==============================================
 router.get('/', (req, res) => {
 
-    Doctor.find().then((data) => {
+    Doctor.find().populate('qualifications').then((data) => {
         res.status(200).json(data);
     }, (err) => {
         res.status(400).json(err);
@@ -22,11 +43,21 @@ router.get('/', (req, res) => {
 // ==============================================
 router.post('/', (req, res) => {
 
-    const doctor = new Doctor(req.body);
+    const userBody = _.pick(req.body, ['email', 'password']);
+    const doctorBody = _.pick(req.body.doctor, ['first_name', 'last_name', 'professional_statement', 'practicing_from']);
 
-    doctor.save().then((data) => {
-        res.status(200).json(data);
-    }, (err) => {
+    const user = new User(userBody);
+    const newDoctor = new Doctor(doctorBody);
+
+    user.doctor = newDoctor;
+
+    Promise.all([user.save(), newDoctor.save()]).then(() => {
+        return user.generateAuthToken();
+    })
+    .then((token) => {
+        res.header('x-auth', token).json(user);
+    })
+    .catch(err => {
         res.status(400).json(err);
     });
 
@@ -48,7 +79,7 @@ router.put('/:id', (req, res) => {
 // ==============================================
 router.get('/:id', (req, res) => {
 
-    Doctor.findOne({_id: req.params.id}).then((data) => {
+    Doctor.findOne({_id: req.params.id}).populate('qualifications').then((data) => {
         res.status(200).json(data);
     }, (err) => {
         res.status(400).json(err);
@@ -60,12 +91,17 @@ router.get('/:id', (req, res) => {
 // ==============================================
 router.delete('/:id', (req, res) => {
 
-    Doctor.deleteOne({_id: req.params.id}).then((data) => {
+    // console.log(req.params.id);
+    const idUser = mongoose.Types.ObjectId(req.params.id);
+
+    Doctor.delete({ _id: req.params.id }, (err, result) => {
+        if (err) {
+            res.status(400).json(err);
+            return;
+        }
         res.status(200).json({msg: 'successfully deleted'});
-    }, (err) => {
-        res.status(400).json(err);
     });
-    
+
 });
 
 // create doctor qualification
@@ -73,7 +109,8 @@ router.delete('/:id', (req, res) => {
 router.post('/:id/qualifications', (req, res) => {
 
     const doctor = Doctor.findOne({_id: req.params.id}).then((doctor) => {
-        doctor.qualifications.push(req.body);
+        const qualification = new Qualification(req.body);
+        doctor.qualifications.push(qualification);
         return doctor.save();
     })
     .then((data) => {
@@ -90,10 +127,17 @@ router.post('/:id/qualifications', (req, res) => {
 router.put('/:id/qualifications/:qid', (req, res) => {
 
     const { id, qid } = req.params;
+    const qualification = new Qualification(req.body);
+
+    // Doctor.findOneAndUpdate(req.params.id, { $set: req.body }, {new: true}).then((data) => {
+    //     res.status(200).json(data);
+    // }, (err) => {
+    //     res.status(400).json(err);
+    // });
 
     const doctor = Doctor.findOneAndUpdate(
         { '_id': id, 'qualifications._id': qid}, 
-        { $set: { 'qualifications.$': req.body } },
+        { $set: { 'qualifications.$': qualification } },
         { new: true }
     )
     .then((data) => {

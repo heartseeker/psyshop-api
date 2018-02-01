@@ -1,6 +1,6 @@
 const mongoose = require('../db/mongoose');
 const Schema = mongoose.Schema;
-const Qualification = require('./subdoc/qualification');
+const mongooseDelete = require('mongoose-delete');
 
 // Create Doctors Schema
 const DoctorSchema = new Schema({
@@ -20,7 +20,9 @@ const DoctorSchema = new Schema({
         type: Date,
         default: null
     },
-    qualifications: [Qualification]
+    qualifications: [{ type: Schema.Types.ObjectId, ref: 'Qualification' }]
 });
+
+DoctorSchema.plugin(mongooseDelete, { deletedAt : true, overrideMethods: true });
 
 module.exports = mongoose.model('Doctor', DoctorSchema);
