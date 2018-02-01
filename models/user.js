@@ -60,7 +60,7 @@ UserSchema.methods.generateAuthToken = function() {
     });
 }
 
-// create Model method
+// create Model method for finding user by token
 // =======================================
 UserSchema.statics.findByToken = function(token) {
     const User = this;
@@ -79,6 +79,32 @@ UserSchema.statics.findByToken = function(token) {
     })
     .populate('doctor');
 }
+
+
+// create Model method for logging n
+// =======================================
+UserSchema.statics.findByCredentials = function (email, password) {
+    var User = this;
+  
+    return User.findOne({email}).then((user) => {
+      if (!user) {
+        return Promise.reject();
+      }
+  
+      return new Promise((resolve, reject) => {
+        // Use bcrypt.compare to compare password and user.password
+        bcrypt.compare(password, user.password, (err, res) => {
+          if (res) {
+              console.log('in!');
+            resolve(user);
+          } else {
+            reject();
+          }
+        });
+      });
+    });
+  };
+
 
 // show only specific fields on response
 // =======================================
@@ -106,5 +132,7 @@ UserSchema.pre('save', function(next) {
         next();
     }
 });
+
+
 
 module.exports = mongoose.model('User', UserSchema);

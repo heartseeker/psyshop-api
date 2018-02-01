@@ -19,6 +19,21 @@ const User = require('../../models/user');
 const authenticate = require('../middleware/authenticate');
 
 
+// API login
+// ==============================================
+router.post('/login', (req, res) => {
+    
+    User.findByCredentials(req.body.email, req.body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.header('x-auth', token).send(user);
+        });
+    })
+    .catch((e) => {
+        res.status(401).send();
+    });
+
+});
+
 
 // API doctor self route
 // ==============================================
