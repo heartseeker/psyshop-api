@@ -5,6 +5,7 @@ const Client = require('./client');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = new Schema({
     email: {
@@ -87,5 +88,23 @@ UserSchema.methods.toJSON = function() {
 
     return _.pick(userObject, ['email', 'doctor', 'client']);
 }
+
+// hash password before save
+// =======================================
+UserSchema.pre('save', function(next) {
+
+    const user = this;
+
+    if (user.isModified('password')) {
+        bcrypt.genSalt(10, function(err, salt) {
+            bcrypt.hash(user.password, salt, function(err, hash) {
+                user.password = hash;
+                next();
+            });
+        });
+    } else {
+        next();
+    }
+});
 
 module.exports = mongoose.model('User', UserSchema);
