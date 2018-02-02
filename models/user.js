@@ -60,6 +60,29 @@ UserSchema.methods.generateAuthToken = function() {
     });
 }
 
+// show only specific fields on response
+// =======================================
+UserSchema.methods.toJSON = function() {
+    const user = this;
+    const userObject = user.toObject();
+
+    return _.pick(userObject, ['email', 'doctor', 'client']);
+}
+
+
+// delete token
+// =======================================
+UserSchema.methods.removeToken = function(token) {
+    const user = this;
+    
+    return user.update({
+        $pull: {
+            tokens: { token }
+        }
+    });
+}
+
+
 // create Model method for finding user by token
 // =======================================
 UserSchema.statics.findByToken = function(token) {
@@ -104,16 +127,6 @@ UserSchema.statics.findByCredentials = function (email, password) {
       });
     });
   };
-
-
-// show only specific fields on response
-// =======================================
-UserSchema.methods.toJSON = function() {
-    const user = this;
-    const userObject = user.toObject();
-
-    return _.pick(userObject, ['email', 'doctor', 'client']);
-}
 
 // hash password before save
 // =======================================
