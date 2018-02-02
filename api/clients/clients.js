@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 
 const _ = require('lodash');
 
+const authenticate = require('../middleware/authenticate');
 
 
 // load models
@@ -22,6 +23,10 @@ router.get('/', (req, res) => {
     })
 })
 
+
+
+// create a client
+// ==============================================
 router.post('/', (req, res) => {
 
     const userBody = _.pick(req.body, ['email', 'password']);
@@ -32,14 +37,29 @@ router.post('/', (req, res) => {
 
     newUser.client = client;
 
-    Promise.all([newUser.save(), client.save()]).then((user) => {
-        res.status(200).json(user);
+    Promise.all([newUser.save(), client.save()]).then(() => {
+        return newUser.generateAuthToken();
+    })
+    .then((token) => {
+        res.header('x-auth', token).json(newUser);
     })
     .catch(err => {
         res.status(400).json(err);
     });
 
-
 })
+
+// update a client
+// ==============================================
+router.put('/me', authenticate , (req, res) => {
+    
+    User.findTokenAndUpdate(req).then((user) => {
+        res.send(user);
+    })
+    .catch((err) => {
+        res.status(400).json(err);
+    })
+
+});
 
 module.exports = router;

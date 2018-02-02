@@ -145,12 +145,23 @@ UserSchema.statics.findTokenAndUpdate = function (req) {
 
     var path = req.originalUrl.split('/');
 
+    return User.findOne({_id: decoded._id}).then((user) => {
+        if(!user) {
+            return Promise.reject();
+        }
 
-    if(path[2] === 'clients') {
-        return Client.findOneAndUpdate(req.user.client.id, { $set: req.body.client }, { new: true });
-    }
-
-    return Doctor.findOneAndUpdate(req.user.doctor.id, { $set: req.body.doctor }, { new: true });
+        if(path[2] === 'clients') {
+            if (!user.client) {
+                return Promise.reject();
+            }
+            return Client.findOneAndUpdate({ _id: user.client }, { $set: req.body.client }, { new: true });
+        }
+        
+        if (!user.doctor) {
+            return Promise.reject();
+        }
+        return Doctor.findOneAndUpdate({ _id: user.doctor}, { $set: req.body.doctor }, { new: true });
+    })
 
 };
 

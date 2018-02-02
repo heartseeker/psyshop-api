@@ -99,8 +99,8 @@ router.put('/me', authenticate , (req, res) => {
     User.findTokenAndUpdate(req).then((user) => {
         res.send(user);
     })
-    .catch((err) => {
-        res.status(400).json(err);
+    .catch(() => {
+        res.status(400).json();
     })
 
 });
