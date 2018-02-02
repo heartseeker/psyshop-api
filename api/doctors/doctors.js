@@ -76,20 +76,18 @@ router.post('/', (req, res) => {
     const doctorBody = _.pick(req.body.doctor, ['first_name', 'last_name', 'professional_statement', 'practicing_from']);
 
     const user = new User(userBody);
-    const newDoctor = new Doctor(doctorBody);
-
-    user.doctor = newDoctor;
-
-    Promise.all([user.save(), newDoctor.save()]).then(() => {
-        return user.generateAuthToken();
-    })
-    .then((token) => {
-        res.header('x-auth', token).json(user);
-    })
-    .catch(err => {
-        res.status(400).json(err);
-    });
-
+    user.doctor = doctorBody;
+    
+    user.save()
+        .then(() => {
+            return user.generateAuthToken();
+        })
+        .then((token) => {
+            res.header('x-auth', token).json(user);
+        })
+        .catch(err => {
+            res.status(400).json(err);
+        });
 });
 
 // update a doctor
@@ -105,21 +103,10 @@ router.put('/me', authenticate , (req, res) => {
 
 });
 
-// select a doctor
-// ==============================================
-router.get('/:id', (req, res) => {
-
-    Doctor.findOne({_id: req.params.id}).populate('qualifications').then((data) => {
-        res.status(200).json(data);
-    }, (err) => {
-        res.status(400).json(err);
-    })
-    
-});
 
 // deleting a doctor
 // ==============================================
-router.delete('/:id', (req, res) => {
+router.delete('/me', (req, res) => {
 
     // console.log(req.params.id);
     const idUser = mongoose.Types.ObjectId(req.params.id);

@@ -1,11 +1,12 @@
 const mongoose = require('../db/mongoose');
 const Schema = mongoose.Schema;
-const Doctor = require('./doctor');
-const Client = require('./client');
+const DoctorSchema = require('./doctor');
+const ClientSchema = require('./client');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+const mongooseDelete = require('mongoose-delete');
 
 const UserSchema = new Schema({
     email: {
@@ -36,14 +37,8 @@ const UserSchema = new Schema({
             required: true,
         }
     }],
-    doctor: {
-        type: Schema.Types.ObjectId,
-        ref: 'Doctor'
-    },
-    client: {
-        type: Schema.Types.ObjectId,
-        ref: 'Client'
-    }
+    doctor: DoctorSchema,
+    client: ClientSchema
 });
 
 // create instance method
@@ -99,9 +94,7 @@ UserSchema.statics.findByToken = function(token) {
         '_id': decoded._id,
         'tokens.token': token,
         'tokens.access': 'auth'
-    })
-    .populate('doctor')
-    .populate('client');
+    });
 }
 
 
@@ -145,23 +138,12 @@ UserSchema.statics.findTokenAndUpdate = function (req) {
 
     var path = req.originalUrl.split('/');
 
-    return User.findOne({_id: decoded._id}).then((user) => {
-        if(!user) {
-            return Promise.reject();
-        }
 
-        if(path[2] === 'clients') {
-            if (!user.client) {
-                return Promise.reject();
-            }
-            return Client.findOneAndUpdate({ _id: user.client }, { $set: req.body.client }, { new: true });
-        }
-        
-        if (!user.doctor) {
-            return Promise.reject();
-        }
-        return Doctor.findOneAndUpdate({ _id: user.doctor}, { $set: req.body.doctor }, { new: true });
-    })
+    if(path[2] === 'clients') {
+        return User.findOneAndUpdate({ _id: decoded._id, client:{ $exists: true} }, { $set: { 'client': req.body.client } }, { new: true });
+    }
+ 
+    return User.findOneAndUpdate({ _id: decoded._id, doctor:{ $exists: true} }, { $set: { 'doctor': req.body.doctor } }, { new: true });
 
 };
 
@@ -183,6 +165,6 @@ UserSchema.pre('save', function(next) {
     }
 });
 
-
+UserSchema.plugin(mongooseDelete, { deletedAt : true, overrideMethods: true });
 
 module.exports = mongoose.model('User', UserSchema);

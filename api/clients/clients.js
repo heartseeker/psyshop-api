@@ -32,20 +32,19 @@ router.post('/', (req, res) => {
     const userBody = _.pick(req.body, ['email', 'password']);
     const clientBody = _.pick(req.body.client, ['first_name', 'last_name']);
 
-    const newUser = new User(userBody);
-    const client = new Client(clientBody);
+    const user = new User(userBody);
+    user.client = clientBody;
 
-    newUser.client = client;
-
-    Promise.all([newUser.save(), client.save()]).then(() => {
-        return newUser.generateAuthToken();
-    })
-    .then((token) => {
-        res.header('x-auth', token).json(newUser);
-    })
-    .catch(err => {
-        res.status(400).json(err);
-    });
+    user.save()
+        .then(() => {
+            return user.generateAuthToken();
+        })
+        .then((token) => {
+            res.header('x-auth', token).json(user);
+        })
+        .catch(err => {
+            res.status(400).json(err);
+        });
 
 })
 
