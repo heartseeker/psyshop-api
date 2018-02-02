@@ -100,14 +100,15 @@ UserSchema.statics.findByToken = function(token) {
         'tokens.token': token,
         'tokens.access': 'auth'
     })
-    .populate('doctor');
+    .populate('doctor')
+    .populate('client');
 }
 
 
 // create Model method for logging n
 // =======================================
 UserSchema.statics.findByCredentials = function (email, password) {
-    var User = this;
+    const User = this;
   
     return User.findOne({email}).then((user) => {
       if (!user) {
@@ -127,6 +128,31 @@ UserSchema.statics.findByCredentials = function (email, password) {
       });
     });
   };
+
+
+// create Model method for updating user
+// =======================================
+UserSchema.statics.findTokenAndUpdate = function (req) {
+    const User = this;
+    let decoded;
+
+    
+    try {
+        decoded = jwt.verify(req.token, 'abc123');
+    } catch (e) {
+        return Promise.reject(e);
+    }
+
+    var path = req.originalUrl.split('/');
+
+
+    if(path[2] === 'clients') {
+        return Client.findOneAndUpdate(req.user.client.id, { $set: req.body.client }, { new: true });
+    }
+
+    return Doctor.findOneAndUpdate(req.user.doctor.id, { $set: req.body.doctor }, { new: true });
+
+};
 
 // hash password before save
 // =======================================

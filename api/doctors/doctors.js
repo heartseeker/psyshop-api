@@ -94,13 +94,14 @@ router.post('/', (req, res) => {
 
 // update a doctor
 // ==============================================
-router.put('/:id', (req, res) => {
-
-    Doctor.findOneAndUpdate(req.params.id, { $set: req.body }, {new: true}).then((data) => {
-        res.status(200).json(data);
-    }, (err) => {
+router.put('/me', authenticate , (req, res) => {
+    
+    User.findTokenAndUpdate(req).then((user) => {
+        res.send(user);
+    })
+    .catch((err) => {
         res.status(400).json(err);
-    });
+    })
 
 });
 
