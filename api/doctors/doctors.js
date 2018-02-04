@@ -159,23 +159,20 @@ router.get('/me/qualifications', authenticate , (req, res) => {
 
 // updating doctor qualification
 // ==============================================
-router.put('/:id/qualifications/:qid', (req, res) => {
+router.put('/me/qualifications/:qid', authenticate, (req, res) => {
 
-    const { id, qid } = req.params;
-    const qualification = new Qualification(req.body);
+    const { qid } = req.params;
 
-    // Doctor.findOneAndUpdate(req.params.id, { $set: req.body }, {new: true}).then((data) => {
-    //     res.status(200).json(data);
-    // }, (err) => {
-    //     res.status(400).json(err);
-    // });
-
-    const doctor = Doctor.findOneAndUpdate(
-        { '_id': id, 'qualifications._id': qid}, 
-        { $set: { 'qualifications.$': qualification } },
+    Qualification.findOneAndUpdate(
+        { _creator: req.user._id, _id: qid}, 
+        { $set: req.body  },
         { new: true }
     )
     .then((data) => {
+        if (!data) {
+            res.status(400).json();
+            return;
+        }
         res.status(200).json(data);
     }, (err) => {
         res.status(400).json(err);
