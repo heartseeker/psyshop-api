@@ -153,7 +153,6 @@ router.get('/me/qualifications', authenticate , (req, res) => {
     }, (err) => {
         res.status(400).json(err);
     });
-    // res.send('test');
 
 });
 
