@@ -22,6 +22,4 @@ const DoctorSchema = new Schema({
     qualifications: [{ type: Schema.Types.ObjectId, ref: 'Qualification' }]
 });
 
-// module.exports = mongoose.model('Doctor', DoctorSchema);
-
 module.exports = DoctorSchema;

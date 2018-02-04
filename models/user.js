@@ -140,11 +140,33 @@ UserSchema.statics.findTokenAndUpdate = function (req) {
 
 
     if(path[2] === 'clients') {
-        return User.findOneAndUpdate({ _id: decoded._id, client:{ $exists: true} }, { $set: { 'client': req.body.client } }, { new: true });
+        return User.findOneAndUpdate({ _id: decoded._id}, { $set: { 'client': req.body.client } }, { new: true, runValidators: true });
     }
- 
-    return User.findOneAndUpdate({ _id: decoded._id, doctor:{ $exists: true} }, { $set: { 'doctor': req.body.doctor } }, { new: true });
+    
+    return User.findOneAndUpdate({ _id: decoded._id}, { $set: { 'doctor': req.body.doctor } }, { new: true, runValidators: true });
+};
 
+// create Model method for doctor qualification
+// =======================================
+UserSchema.statics.findTokenAndUpdateQualification = function (req) {
+    const User = this;
+    let decoded;
+
+    
+    try {
+        decoded = jwt.verify(req.token, 'abc123');
+    } catch (e) {
+        return Promise.reject(e);
+    }
+
+    var path = req.originalUrl.split('/');
+
+
+    if(path[2] === 'clients') {
+        return User.findOneAndUpdate({ _id: decoded._id}, { $set: { 'client': req.body.client } }, { new: true, runValidators: true });
+    }
+    
+    return User.findOneAndUpdate({ _id: decoded._id}, { $set: { 'doctor': req.body.doctor } }, { new: true, runValidators: true });
 };
 
 // hash password before save

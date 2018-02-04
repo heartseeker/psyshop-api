@@ -97,8 +97,8 @@ router.put('/me', authenticate , (req, res) => {
     User.findTokenAndUpdate(req).then((user) => {
         res.send(user);
     })
-    .catch(() => {
-        res.status(400).json();
+    .catch((err) => {
+        res.status(400).json(err);
     })
 
 });
@@ -123,18 +123,37 @@ router.delete('/me', (req, res) => {
 
 // create doctor qualification
 // ==============================================
-router.post('/:id/qualifications', (req, res) => {
+router.post('/me/qualifications', authenticate , (req, res) => {
 
-    const doctor = Doctor.findOne({_id: req.params.id}).then((doctor) => {
-        const qualification = new Qualification(req.body);
-        doctor.qualifications.push(qualification);
-        return doctor.save();
+    const qualificationBody = _.pick(req.body, ['qualification_name', 'institute_name', 'procurement_year']);
+
+    qualificationBody['_creator'] = req.user._id;
+    
+    const qualification = new Qualification(qualificationBody);
+
+    qualification.save()
+        .then((data) => {
+            res.status(200).json(data);
+        }, (err) => {
+            res.status(400).json(err);
+        });
+
+});
+
+
+// get doctor qualification
+// ==============================================
+router.get('/me/qualifications', authenticate , (req, res) => {
+
+    Qualification.find({
+        _creator: req.user._id
     })
     .then((data) => {
         res.status(200).json(data);
     }, (err) => {
         res.status(400).json(err);
     });
+    // res.send('test');
 
 });
 

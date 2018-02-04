@@ -13,6 +13,10 @@ const QualificationSchema = new Schema({
     },
     procurement_year: {
         type: Date,
+    },
+    _creator: {
+        type: Schema.Types.ObjectId,
+        required: true
     }
 });
 

@@ -8,6 +8,22 @@ const authenticate = (req, res, next) => {
             if (!user) {
                 return Promise.reject();
             }
+
+            const path = req.originalUrl.split('/')[2];
+
+
+            if (path === 'clients') {
+                if (!user.client) {
+                    return Promise.reject();
+                }
+            }
+
+            if (path === 'doctors') {
+                if (!user.doctor) {
+                    return Promise.reject();
+                }
+            }
+
             req.user = user;
             req.token = token;
             next();

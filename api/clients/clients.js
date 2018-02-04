@@ -46,7 +46,14 @@ router.post('/', (req, res) => {
             res.status(400).json(err);
         });
 
-})
+});
+
+
+// API client self route
+// ==============================================
+router.get('/me', authenticate,  (req, res) => {
+    res.send(req.user);
+});
 
 // update a client
 // ==============================================
