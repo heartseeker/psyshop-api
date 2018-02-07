@@ -52,7 +52,7 @@ router.delete('/me/logout', authenticate,  (req, res) => {
 // API doctor self route
 // ==============================================
 router.get('/me', authenticate,  (req, res) => {
-    res.send(req.user);
+    res.status(200).json(req.user);
 });
 
 
@@ -106,12 +106,9 @@ router.put('/me', authenticate , (req, res) => {
 
 // deleting a doctor
 // ==============================================
-router.delete('/me', (req, res) => {
+router.delete('/me', authenticate, (req, res) => {
 
-    // console.log(req.params.id);
-    const idUser = mongoose.Types.ObjectId(req.params.id);
-
-    Doctor.delete({ _id: req.params.id }, (err, result) => {
+    User.delete({ _id: req.user._id }, (err, result) => {
         if (err) {
             res.status(400).json(err);
             return;
@@ -120,6 +117,10 @@ router.delete('/me', (req, res) => {
     });
 
 });
+
+//============================================================================================>
+// Qualifications
+//============================================================================================>
 
 // create doctor qualification
 // ==============================================
@@ -133,11 +134,19 @@ router.post('/me/qualifications', authenticate , (req, res) => {
 
     qualification.save()
         .then((data) => {
-            res.status(200).json(data);
+            console.log('data', data._id);
+            // update qualifications in user model
+            User.update(
+                { _id: req.user._id },
+                { $push: { 'doctor.qualifications': data._id } },
+                { 'upsert': true },
+            )
+            .then((data) => {
+                res.status(200).json(data);
+            });
         }, (err) => {
             res.status(400).json(err);
         });
-
 });
 
 
@@ -177,6 +186,22 @@ router.put('/me/qualifications/:qid', authenticate, (req, res) => {
     }, (err) => {
         res.status(400).json(err);
     });
+});
+
+// deleting qualifications
+// ==============================================
+router.delete('/me/qualifications/:qid', authenticate, (req, res) => {
+
+    const { qid } = req.params;
+
+    Qualification.delete({ _creator: req.user._id, _id: qid }, (err, result) => {
+        if (err) {
+            res.status(400).json(err);
+            return;
+        }
+        res.status(200).json({msg: 'successfully deleted'});
+    });
+
 });
 
 

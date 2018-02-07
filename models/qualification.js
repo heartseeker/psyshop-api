@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const mongooseDelete = require('mongoose-delete');
 const Schema = mongoose.Schema;
 
 const QualificationSchema = new Schema({
@@ -20,4 +20,5 @@ const QualificationSchema = new Schema({
     }
 });
 
+QualificationSchema.plugin(mongooseDelete, { deletedAt : true, overrideMethods: true });
 module.exports = mongoose.model('Qualification', QualificationSchema);
