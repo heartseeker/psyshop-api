@@ -15,11 +15,17 @@ const DoctorSchema = new Schema({
         type: String,
         required: true
     },
+    is_guest: {
+        type: Boolean,
+        default: false
+    },
     practicing_from: {
         type: Date,
         default: null
     },
-    qualifications: [{ type: Schema.Types.ObjectId, ref: 'Qualification' }]
+    qualifications: [{ type: Schema.Types.ObjectId, ref: 'Qualification' }],
+    affiliations: [{ type: Schema.Types.ObjectId, ref: 'Affiliation' }],
+    specializations: [{ type: Schema.Types.ObjectId, ref: 'Specialization' }]
 });
 
 module.exports = DoctorSchema;

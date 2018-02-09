@@ -13,11 +13,16 @@ const _ = require('lodash');
 const Doctor = require('../../models/doctor');
 const Qualification = require('../../models/qualification');
 const User = require('../../models/user');
+const Affiliation = require('../../models/affiliation');
+const Specialization = require('../../models/specialization');
 
 // load Middlewares
 // ==============================================
 const authenticate = require('../middleware/authenticate');
 
+// Utilities
+// ==============================================
+const crud = require('../../utilities/crud');
 
 // API login
 // ==============================================
@@ -73,7 +78,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
 
     const userBody = _.pick(req.body, ['email', 'password']);
-    const doctorBody = _.pick(req.body.doctor, ['first_name', 'last_name', 'professional_statement', 'practicing_from']);
+    const doctorBody = _.pick(req.body.doctor, ['first_name', 'last_name', 'professional_statement', 'practicing_from', 'is_guest']);
 
     const user = new User(userBody);
     user.doctor = doctorBody;
@@ -134,7 +139,6 @@ router.post('/me/qualifications', authenticate , (req, res) => {
 
     qualification.save()
         .then((data) => {
-            console.log('data', data._id);
             // update qualifications in user model
             User.update(
                 { _id: req.user._id },
@@ -204,5 +208,100 @@ router.delete('/me/qualifications/:qid', authenticate, (req, res) => {
 
 });
 
+//============================================================================================>
+// Affiliations
+//============================================================================================>
+
+
+// create affiliation
+// ==============================================
+router.post('/me/affiliations', authenticate , (req, res) => {
+
+    const reqBody = _.pick(req.body, ['name', 'city', 'country', 'start_date', 'end_date']);
+
+    reqBody['_creator'] = req.user._id;
+    
+    const model = new Affiliation(reqBody);
+
+    const update = 'doctor.affiliations';
+
+    crud.createUserDocument(model, User, update, req, res);
+
+});
+
+
+// update affiliation
+// ==============================================
+router.put('/me/affiliations/:id', authenticate , (req, res) => {
+    crud.updateUserDocument(Affiliation, req.body, req.params.id, req, res);
+});
+
+
+// delete affiliation
+// ==============================================
+router.delete('/me/affiliations/:id', authenticate , (req, res) => {
+    crud.deleteUserDocument(Affiliation, req.params.id, req, res);
+});
+
+
+// create specializations
+// ==============================================
+router.post('/me/specializations', authenticate, (req, res) => {
+    
+    const specialization_id = req.body.specialization_id;
+
+    // check if specialization exist
+    Specialization.findOne({_id: specialization_id})
+        .then((count) => {
+            
+            // check if doctor specialization exist
+            User.findOne({
+                _id: req.user._id,
+                'doctor.specializations': specialization_id
+            }).then((data) => {
+                if (data) {
+                    return Promise.reject();
+                }
+                // insert specialization in doctor
+                User.update(
+                    { _id: req.user._id },
+                    { $push: { 'doctor.specializations': specialization_id } },
+                    { 'upsert': true },
+                )
+                .then((data) => {
+                    res.status(200).json(data);
+                });
+            })
+            .catch((err) => {
+                res.status(400).json();
+            });
+
+            
+
+        }, (err) => {
+            res.status(400).json(err);
+        }); 
+
+});
+
+
+
+// Admin API (Temporarily in here)
+// create affiliation
+// ==============================================
+router.post('/specializations', (req, res) => {
+    
+    const special = new Specialization({
+        specialization_name: req.body.specialization_name
+    });
+
+    special.save()
+        .then((data) => {
+            res.status(200).json(data);
+        }, (err) => {
+            res.status(400).json(err);
+        })
+
+});
 
 module.exports = router;
