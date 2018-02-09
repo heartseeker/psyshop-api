@@ -285,6 +285,12 @@ router.post('/me/specializations', authenticate, (req, res) => {
 });
 
 
+// update specializations
+// ==============================================
+router.put('/me/specializations/:id', authenticate , (req, res) => {
+    crud.updateUserDocument(Specialization, req.body, req.params.id, req, res);
+});
+
 
 // Admin API (Temporarily in here)
 // create affiliation

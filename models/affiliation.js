@@ -21,6 +21,7 @@ const AffiliationSchema = new Schema({
     end_date: {
         type: Date,
     },
+    offices: [{ type: Schema.Types.ObjectId, ref: 'Office' }],
     _creator: {
         type: Schema.Types.ObjectId,
         required: true
