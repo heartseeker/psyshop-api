@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
 
     const userBody = _.pick(req.body, ['email', 'password']);
-    const clientBody = _.pick(req.body.client, ['first_name', 'last_name']);
+    const clientBody = _.pick(req.body.client, ['info', 'spouse']);
 
     const user = new User(userBody);
     user.client = clientBody;
