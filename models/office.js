@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const mongooseDelete = require('mongoose-delete');
 const Schema = mongoose.Schema;
+const Availability = require('../models/subdoc/availabilities');
 
 const OfficeSchema = new Schema({
     time_slot_per_client_in_min: {
@@ -31,6 +32,7 @@ const OfficeSchema = new Schema({
         type: String,
         required: true
     },
+    availabilities: [Availability],
     _creator: {
         type: Schema.Types.ObjectId,
         required: true

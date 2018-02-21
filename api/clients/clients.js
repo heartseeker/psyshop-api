@@ -49,6 +49,40 @@ router.post('/', (req, res) => {
 });
 
 
+// ==============================================
+// PRIVATE API's
+// ==============================================
+
+// API login
+// ==============================================
+router.post('/login', (req, res) => {
+    
+    User.findByCredentials(req.body.email, req.body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.header('x-auth', token).send(user);
+        });
+    })
+    .catch((e) => {
+        res.status(401).send();
+    });
+
+});
+
+
+// API logout route
+// ==============================================
+router.delete('/me/logout', authenticate,  (req, res) => {
+    
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send();
+    })
+    .catch(() => {
+        res.status(400).send();
+    });
+
+});
+
+
 // API client self route
 // ==============================================
 router.get('/me', authenticate,  (req, res) => {

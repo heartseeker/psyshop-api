@@ -7,7 +7,7 @@ module.exports = {
             updateClass.update(
                 { _id: req.user._id },
                 { $push: { [update]: data._id } },
-                { 'upsert': true },
+                { upsert: true, runValidators: true },
             )
             .then((data) => {
                 res.status(200).json(data);

@@ -97,6 +97,7 @@ UserSchema.statics.findByToken = function(token) {
     })
     .populate('doctor.qualifications')
     .populate('doctor.affiliations')
+    .populate('doctor.affiliations.offices')
     .populate('doctor.specializations');
 }
 
