@@ -104,7 +104,7 @@ UserSchema.statics.findByToken = function(token) {
 
 // create Model method for logging n
 // =======================================
-UserSchema.statics.findByCredentials = function (email, password) {
+UserSchema.statics.findByCredentials = function (email, password, req) {
     const User = this;
   
     return User.findOne({email}).then((user) => {
@@ -116,7 +116,14 @@ UserSchema.statics.findByCredentials = function (email, password) {
         // Use bcrypt.compare to compare password and user.password
         bcrypt.compare(password, user.password, (err, res) => {
           if (res) {
-              console.log('in!');
+            var path = req.originalUrl.split('/');
+            if (!user.doctor && path[2] === 'doctors') {
+                reject(); return;
+            }
+            if (!user.client && path[2] === 'clients') {
+                reject(); return;
+            }
+
             resolve(user);
           } else {
             reject();
